@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プロフィールサイト</title>
+    <style>
+        /* 全体の基本設定 */
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            background-color: #fafafa;
+        }
+
+        /* ★★★ 左上の三本線（ハンバーガー）ボタン ★★★ */
+        .hamburger-btn {
+            position: fixed; /* 画面の左上に固定 */
+            top: 10px;       /* 余裕を持たせた位置に調整 */
+            left: 15px;
+            z-index: 100;    /* メニューより手前（一番上）に表示させる */
+            background-color: transparent; /* 最初は背景を透明に */
+            border: none;
+            cursor: pointer; /* マウスを乗せたら指のマークにする */
+            
+            /* 背景に綺麗な余裕を持たせるための余白とサイズ */
+            padding: 8px;
+            width: 46px;        /* 線の幅30px + 左右の余白16px */
+            height: 40px;       /* 線の高さ24px + 上下の余白16px */
+            border-radius: 6px; /* 黒い背景の角を少し丸くする */
+            box-sizing: border-box;
+            
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            
+            /* 背景色が変わる動きを0.3秒かけて滑らかにする */
+            transition: background-color 0.3s ease;
+        }
+
+        /* 💡 マウスカーソルを合わせたとき（hover）に背景を黒にする */
+        .hamburger-btn:hover {
+            background-color: #000000;
+        }
+
+        /* ★★★ 三本線の1本ずつのデザイン ★★★ */
+        .hamburger-btn span {
+            display: block;
+            width: 100%;
+            height: 3px;          /* 線の太さ */
+            background-color: white; /* 線の色 */
+            border-radius: 2px;
+            transition: all 0.3s ease; /* 0.3秒かけて滑らかに動かす */
+        }
+
+        /* 💡 マウスカーソルを合わせたときの線の動き（三本線のときだけ動く設定） */
+        .hamburger-btn:not(.active):hover span:nth-child(1) {
+            transform: translateY(-2px); /* 一番上の線を少し上に上げる */
+        }
+        .hamburger-btn:not(.active):hover span:nth-child(3) {
+            transform: translateY(2px);  /* 一番下の線を少し下に下げる */
+        }
+
+        /* ★★★ メニューが開いているとき（active）のバツ印への変形 ★★★ */
+        .hamburger-btn.active span:nth-child(1) {
+            transform: translateY(10px) rotate(45deg);
+        }
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0; /* 真ん中の線を消す */
+        }
+        .hamburger-btn.active span:nth-child(3) {
+            transform: translateY(-11px) rotate(-45deg);
+        }
+
+        /* ★★★ スライドしてくる左側のメニューバー ★★★ */
+        .sidebar {
+            position: fixed; /* 画面に固定 */
+            top: 0;
+            left: -250px; /* ★最初は画面の左外（-250px）に隠しておく */
+            width: 250px;
+            height: 100vh; /* 画面の高さいっぱい */
+            background-color: #333;
+            padding-top: 70px; /* 上部のボタンにかぶらないように余白をあける */
+            transition: left 0.3s ease; /* ★0.3秒かけて滑らかにスライドさせるアニメーション */
+            z-index: 50; /* メイン画面より手前、ボタンより奥 */
+        }
+
+        /* JavaScriptでこのクラスが追加されたら、画面内にスライドしてくる */
+        .sidebar.active {
+            left: 0; 
+        }
+
+        .sidebar a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 15px 20px;
+            font-size: 16px;
+            border-bottom: 1px solid #555;
+        }
+
+        .sidebar a:hover {
+            background-color: aqua;
+            color: #333;
+        }
+
+        /* ★★★ 右側のメインコンテンツ ★★★ */
+        .header-banner {
+            background-color: aqua;
+            color: white;
+            text-align: center;
+            padding: 15px 0;
+        }
+
+        .header-banner h1 {
+            margin: 5px 0;
+            font-size: 28px;
+            letter-spacing: 2px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .urawa-albirex-image-container {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .urawa-albirex-image {
+            width: 100%;
+            max-width: 500px;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .section-title {
+            border-left: 6px solid aqua;
+            padding-left: 12px;
+            font-size: 24px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+
+        .profile-info p {
+            margin: 8px 0;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        /* ★★★ プロフィール表（HTML表要素）のデザイン ★★★ */
+        .profile-table {
+            width: 100%;
+            border-collapse: collapse; /* 枠線を1本にまとめる */
+            margin-top: 15px;
+            margin-bottom: 25px;
+            background-color: #ffffff; /* 表の背景を白に */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* 軽い影をつけて上品に */
+            border-radius: 8px;
+            overflow: hidden; /* 角丸を綺麗に見せる設定 */
+        }
+
+        /* 表の左側（項目名）の見出し設定 */
+        .profile-table th {
+            width: 25%; /* 左側の幅を25%に固定 */
+            background-color: #e0fbfb; /* 薄い水色の背景 */
+            color: #008b8b; /* 濃い水色の文字色 */
+            text-align: left;
+            padding: 15px 20px;
+            font-weight: bold;
+            border-bottom: 1px solid #eeeeee;
+        }
+
+        /* 表の右側（内容）の設定 */
+        .profile-table td {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eeeeee;
+            line-height: 1.6;
+        }
+
+        /* 一番下の行の枠線を消す */
+        .profile-table tr:last-child th,
+        .profile-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* ★★★ 2枚の写真と説明文を綺麗に並べる設定 ★★★ */
+        .photo-gallery {
+            display: flex;
+            gap: 20px; /* 写真セット同士の間の隙間 */
+            margin-top: 20px; /* 文章と写真の間の余白 */
+            justify-content: center; /* 中央に寄せる */
+        }
+
+        /* 写真と説明文を囲う1つの箱 */
+        .photo-item {
+            width: 100%;
+            max-width: 350px; /* 写真1枚の最大サイズ */
+            text-align: center; /* 説明文の文字を中央揃えにする */
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 250px; /* 写真の高さ */
+            object-fit: cover; /* 縦横比を崩さずに綺麗に切り抜く */
+            border-radius: 8px; /* 写真の角を少しだけ丸くする */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* 少しだけ影をつけて立体感を出す */
+        }
+
+        /* 説明文（キャプション）の文字デザイン */
+        .photo-caption {
+            margin-top: 10px; /* 写真との間の隙間 */
+            font-size: 14px;  /* 少し小さめの文字にする */
+            color: #555;      /* 真っ黒ではなく少しグレーにして落ち着かせる */
+            line-height: 1.5;
+        }
+
+        /* スマホなど画面が狭いときは自動で縦並びにする設定 */
+        @media (max-width: 600px) {
+            .photo-gallery {
+                flex-direction: column;
+                align-items: center;
+            }
+            .profile-table th, .profile-table td {
+                padding: 12px 15px;
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <button class="hamburger-btn" id="menu-btn">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <aside class="sidebar" id="sidebar">
+        <nav>
+            <a href="profile.html" class="menu-link">プロフィール</a>
+            <a href="hobby.html" class="menu-link">趣味</a>
+            <a href="contact.html">お問い合わせ</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="header-banner">
+            <h1>中村釉のページへようこそ</h1>
+            <h1>Welcome to My website</h1>
+        </header>
+
+        <div class="container">
+            <div class="urawa-albirex-image-container">
+                <img src="urawa-albiex.jpg" alt="浦和戦" class="urawa-albirex-image">
+            </div>
+
+            <h2 class="section-title" id="profile">プロフィール</h2>
+            <div class="profile-info">
+                
+                <table class="profile-table">
+                    <tr>
+                        <th>出身</th>
+                        <td>新潟</td>
+                    </tr>
+                    <tr>
+                        <th>趣味</th>
+                        <td>サッカー観戦</td>
+                    </tr>
+                    <tr>
+                        <th>学部</th>
+                        <td>情報学部</td>
+                    </tr>
+                </table>
+                
+            </div>
+
+            <h2 class="section-title" id="activities">大学生になって取り組んだこと</h2>
+            <div class="profile-info">
+                <p>LinkedIn Students Career Week 2025秋＆LinkedIn Students Career Week 2026春に参加してきました！</p>
+                
+                <div class="photo-gallery">
+                    
+                    <div class="photo-item">
+                        <img src="LInkedIn-2025autumn.jpg" alt="LinkedIn2025イベントの写真1">
+                        <p class="photo-caption">これは2025年秋のイベントの様子です。</p>
+                    </div>
+                    
+                    <div class="photo-item">
+                        <img src="LinkedIn-2026spring.jpg" alt="LinkedIn2026イベントの写真2">
+                        <p class="photo-caption">これは2026年春のイベントの様子です。</p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const menuBtn = document.getElementById('menu-btn');
+        const sidebar = document.getElementById('sidebar');
+        const menuLinks = document.querySelectorAll('.menu-link');
+
+        // 三本線ボタンをクリックしたときの処理
+        menuBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+            menuBtn.classList.toggle('active'); // ボタン自身にも active クラスを付与
+        });
+
+        // メニューの中のリンクをクリックしたときにメニューを閉じる処理
+        menuLinks.forEach(function(link) {
+            link.addEventListener('click', function() {
+                sidebar.classList.remove('active');
+                menuBtn.classList.remove('active'); // 三本線の形状に戻す
+            });
+        });
+    </script>
+
+</body>
+</html>
